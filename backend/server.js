@@ -5,6 +5,8 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import connectMongoDB from "./db/connectmongodb.js";
 import {v2 as cloudinary} from "cloudinary";
+import postRoutes from "./routes/postRoutes.js"
+
 
 dotenv.config();
 cloudinary.config({
@@ -26,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/post", postRoutes);
 
 
 app.listen(PORT, ()=>{
