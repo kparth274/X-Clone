@@ -30,7 +30,8 @@ const PORT = process.env.PORT || 5000;
 
 
 
-app.use(express.json()); // to parse req.body
+app.use(express.json({limit:"4mb"})); // to parse req.body
+// limit should not be too high, otherwise it can be used for DOS attack (Denial of Service) inshort server gets Screwed
 app.use(express.urlencoded({ extended: true })); // to Parse form data (urlencoded)
 
 
