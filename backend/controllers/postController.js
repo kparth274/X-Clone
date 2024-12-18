@@ -2,7 +2,7 @@ import Post from "../models/postModel.js";
 import User from "../models/usermodel.js";
 import Notification from "../models/notification.js"; 
 import {v2 as cloudinary} from "cloudinary";
-import res from "express/lib/response.js";
+
 
 
 
@@ -111,25 +111,38 @@ export const likeUnlikePost = async (req,res) => {
     // To unlike the Post
     await Post.updateOne({_id:postId},{$pull: {likes:userId}});
     await User.updateOne({_id:userId}, {$pull: { likedPosts:postId}});
-    res.status(200).json({ message : "Unliked"});
-} else{
+
+
+    // updating the cache to directly increase the likes without refreshing the page
+     const updatedLikes = post.likes.filter((id) => id.toString() !== userId.toString());
+     res.status(200).json(updatedLikes);
+
+} else {
+
     // To like the Post
+    
     post.likes.push(userId);
-     // Whenever we like a post its gonna be stored in array for liked section
+    
+    // Whenever we like a post its gonna be stored in array for liked section
+    
      await User.updateOne({_id: userId},{$push: {likedPosts:postId}});
      await post.save();
-}
+
    const notification = new Notification({
       from:userId,
       to:post.user,
       type:"like",
     });
     await notification.save();
-    res.status(200).json({ message: "Post Liked"});
+
+    const updatedLikes = post.likes;
+    res.status(200).json(updatedLikes);
+
+}
 
     } catch (error) {
-        console.log("Error in likedUnlikePost Controller: ", error);
-        res.status(500).json({error: "Internal Server Error"});
+        console.log(error);
+       res.status(500).json({error: "Internal Server Error"});
     }
 };
 
