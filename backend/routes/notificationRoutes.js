@@ -5,6 +5,6 @@ import { getNotification, deleteNotification } from "../controllers/notification
 const router = express.Router();
 
 router.get("/", protectRoute, getNotification);
-router.delete("/v", protectRoute, deleteNotification);
+router.delete("/", protectRoute, deleteNotification);
 
 export default router;

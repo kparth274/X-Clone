@@ -1,4 +1,3 @@
-import res from "express/lib/response.js";
 import Notification from "../models/notification.js";
 export const getNotification = async(req, res)=>{
     try {
@@ -19,11 +18,16 @@ export const getNotification = async(req, res)=>{
 export const deleteNotification = async(req, res)=>{
     try {
         const userId = req.user._id;
+
         await Notification.deleteMany({ to:userId});
+        
         res.status(200).json({ message: "Notificcation Deleted Succesfully"});
+    
     } catch (error) {
-       console.log("Error in deleteNotification", error.message);
-       res.status(500).json({ error: "Internal Server Error"});
+     
+        console.log("Error in deleteNotification", error.message);
+     
+        res.status(500).json({ error: "Internal Server Error"});
 
  }
 }

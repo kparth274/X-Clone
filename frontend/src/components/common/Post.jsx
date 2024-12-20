@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useMutation,useQuery, useQueryClient } from "@tanstack/react-query";
 import {toast} from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
+import { formatPostDate } from "../../utils/date";
 
 const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
@@ -15,6 +16,15 @@ const Post = ({ post }) => {
 	const {data: authUser} = useQuery({ queryKey: ["authUser"]});
 
 	const queryClient = useQueryClient();
+	
+	const postOwner = post.user;
+	
+	const isLiked = post.likes.includes(authUser._id);
+
+	const isMyPost = authUser._id === post.user._id;
+
+	const formattedDate = formatPostDate(post.createdAt);
+
 
 	const {mutate: deletePost, isPending: isDeleting} = useMutation({
 
@@ -44,12 +54,41 @@ const Post = ({ post }) => {
 		  // invalidate the query to refresh the data
 		  queryClient.invalidateQueries({ queryKey: ["posts"] });
 		},
-	})
+	});
 
+    const {mutate: commentPost, isPending: isCommenting} = useMutation({
+	mutationFn: async () => {
+		try {
+			const res = await fetch(`/api/post/comment/${post._id}`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ text: comment }),
+			})
+         
+			const data = await res.json();
+			if (!res.ok) {
+				throw new Error(data.message || "Something went wrong");
+			}
+			return data;
 
+		} catch (error) {
+			throw new Error(error);
+		}
+	},
+	onSuccess: () => {
+        toast.success("Comment posted successfully");
+		setComment("");
+		// invalidate the query to refresh the data
+		queryClient.invalidateQueries({ queryKey: ["posts"] });
 
-
-
+	},
+	onError: (error) => {
+		toast.error(error.message);
+		console.log(error);
+	}
+    });
 
     const {mutate:likePost, isPending: isLiking} = useMutation({
 		mutationFn: async () => {
@@ -87,17 +126,10 @@ const Post = ({ post }) => {
 			toast.error(error.message);
 			console.log(error);
 		}
-	})
+	});
 
 
-	const postOwner = post.user;
-	const isLiked = post.likes.includes(authUser._id);
-
-	const isMyPost = authUser._id === post.user._id;
-
-	const formattedDate = "1h";
-
-	const isCommenting = false;
+	
 
 	const handleDeletePost = () => {
 		deletePost();
@@ -105,10 +137,13 @@ const Post = ({ post }) => {
 
 	const handlePostComment = (e) => {
 		e.preventDefault();
+		if(isCommenting) return;  // if it in progress then we are not going to call the function
+		commentPost();
 	};
 
 	const handleLikePost = () => {
-	    likePost();
+	    if(isLiking) return;
+		likePost();
 	};
      
 
